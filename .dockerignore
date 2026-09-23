@@ -1,0 +1,6 @@
+*
+!app.py
+!deployment-manifest.json
+!build-info.json
+!public/
+!public/**

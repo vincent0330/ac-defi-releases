@@ -1,0 +1,17 @@
+{
+  "schema": "ac-defi.deployment.v1",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "verification": "unconfigured",
+  "vault": null,
+  "usdc": null,
+  "checkpointBlock": null,
+  "checkpointHash": null,
+  "runtimeCodeHashes": {},
+  "strategies": {
+    "aave-v3": "DISABLED",
+    "compound-iii": "DISABLED",
+    "spark": "DISABLED"
+  },
+  "transactionsEnabled": false
+}

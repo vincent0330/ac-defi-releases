@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ac-defi:delivery-result:v1",
+  "title": "MECPP prepared or published release result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "providerRunId",
+    "releaseKey",
+    "sourceSha256",
+    "manifestSha256",
+    "releaseState",
+    "network",
+    "chainId",
+    "railwayProjectId",
+    "railwayServiceId",
+    "railwayDeploymentId",
+    "railwayUrl",
+    "artifacts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "defi.product.delivery-result.v1"
+    },
+    "providerRunId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "releaseKey": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "manifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "releaseState": {
+      "enum": [
+        "PREPARED",
+        "PUBLISHED"
+      ]
+    },
+    "network": {
+      "const": "sepolia"
+    },
+    "chainId": {
+      "const": 11155111
+    },
+    "railwayProjectId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "railwayServiceId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "railwayDeploymentId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "railwayUrl": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^https://[^/]+",
+      "format": "uri"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "traceability",
+        "tests",
+        "security",
+        "health"
+      ],
+      "properties": {
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "traceability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "security": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "health": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "releaseState": {
+            "const": "PREPARED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "railwayProjectId": {
+            "type": "null"
+          },
+          "railwayServiceId": {
+            "type": "null"
+          },
+          "railwayDeploymentId": {
+            "type": "null"
+          },
+          "railwayUrl": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "railwayProjectId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "railwayServiceId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "railwayDeploymentId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "railwayUrl": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

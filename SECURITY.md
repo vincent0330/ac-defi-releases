@@ -1,0 +1,11 @@
+# Security scope and limitations
+
+This release cannot move funds. It contains no RPC client, signing methods, approval methods, operator endpoints, executable Vault, governance implementation or protocol adapter. Every strategy is disabled. Unknown balances and yield render as unavailable, never zero or an invented annualized percentage. All chain verification flags stay false.
+
+The stateless web server allows only three static resources, /health, /release and /api/status. Security headers include a same-origin CSP, no framing, no MIME sniffing, no referrer, and no cache. Environment values are never serialized to responses. The container contains no Provider or SQLite data. Python's basic HTTP server should run behind Railway's managed ingress; concurrency, abuse controls and deployment hardening still require coordinator review.
+
+Provider/inbox code is a local unauthenticated test fixture, inaccessible through the release server. Exact loopback URL matching prevents arbitrary callback destinations in this mode; HTTP redirects and ambient proxies are disabled. SQLite records accepted before execution events, enforces unique dispatch/attempt/event identities, and serializes writes. Callback retries acknowledge only 2xx. Terminal events cannot regress. Expired attempts cannot deliver new callbacks; an overdue callback is not execution failure or approval.
+
+The separate local verifier checks hashes, source inventory, manifest identity, test success and health artifacts. It is authored by the same implementation agent, has no external identity system, and is not an independent security audit. Production MECPP requires authenticated dispatch, signed/authenticated callbacks, TLS trust, registry preflight, replay/expiry agreement, ingress controls, artifact authorization, operational limits and externally controlled acceptance. None is claimed complete.
+
+The historical L1 specification requires deployed ERC-4626 accounting, deterministic queue math, Safe governance, upgrade/storage tests and real wallet checks. Those are not implemented or validated by this read-only release. No Solidity contract, financial safety, independent audit, real protocol eligibility, actual yield or network deployment is claimed. Public publication and transactions were not performed. No secrets were accessed.

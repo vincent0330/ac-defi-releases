@@ -1,14 +1,19 @@
-# AC DeFi Releases
+# AC DeFi Release: mitosis-release-20260923-r1
 
-本仓库用于保存由 Mitosis 外部 Agent 生成并通过验收的 AC DeFi 发布版本。
+This branch is one isolated, Railway-deployable output of Provider Run `97f6f177-b652-4c16-b8ac-1900c25b961f`.
 
-## 发布隔离规则
+- Network profile: Ethereum Sepolia (chain ID 11155111)
+- Release key: `efde4ab53eb6c645cb0bc964cb5ce7b97eae7275563384b2c9aac5f777480410`
+- Source inventory SHA-256: `c686817067c8d383296c4724662f792ae7b5f5b10581d3536573ed2c3de00e35`
+- Deployment manifest SHA-256: `5c571a4cbad3b3daf6d991b0a9fee8b7c08856fe995ab35ae9d51d8d2fd38a3b`
 
-- 每一次复刻生成一个独立 Git 分支：`rebuild/<short-run-id>`。
-- 每个分支对应一个独立 Railway 项目、服务和公开域名。
-- 同一 `providerRunId` 的重试复用既有发布记录，不创建重复资源。
-- 默认目标网络为 Ethereum Sepolia；Ethereum Mainnet 仅在拥有独立、经确认的主网配置时启用。
-- Railway 产物不得包含 Anvil、测试水龙头、本地私钥、管理员签名密钥或本地链时间控制。
-- 只有完成源码完整性校验、部署健康检查和发布清单写入的版本才能返回最终 URL。
+## Railway
 
-详细流程见生成工作区中的 `docs/REPEATABLE_RAILWAY_RELEASE.md`。
+Railway builds from this branch root using `Dockerfile`, starts a read-only site, and checks `GET /health`.
+The page supports wallet account selection only; it does not request signing, approval, or transactions. It reports **暂无真实收益率 · 尚未启用收益策略**. No chain deployment is configured, so chain status correctly remains closed.
+
+## Mitosis interface exercise
+
+`provider/` and `tests/` contain the MECPP-v1-style local contract exercise: capability discovery, idempotent work-package dispatch, SQLite durable outbox, same-event retry, callback inbox deduplication and a separate local acceptance gate. It is a local simulation, not a real Mitosis registry, callback credential, Mission acceptance, or security audit.
+
+See `FINAL_REPORT.md`, `SECURITY.md`, and `TRACEABILITY.md` for limitations and verification evidence.

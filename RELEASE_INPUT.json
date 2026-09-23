@@ -1,0 +1,16 @@
+{
+  "schema": "ac-defi.release-input.v1",
+  "runLabel": "mitosis-release-20260923-r1",
+  "gitRepo": "vincent0330/ac-defi-releases",
+  "gitBranch": "rebuild/mitosis-release-20260923-r1",
+  "rootDirectory": "release",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "state": "PREPARED",
+  "railwayProjectId": null,
+  "railwayServiceId": null,
+  "railwayDeploymentId": null,
+  "railwayUrl": null,
+  "requiredReview": "Coordinator verifies source, tests and isolated release identity before any publication",
+  "profile": "stateless-read-only"
+}
