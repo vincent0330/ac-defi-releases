@@ -37,7 +37,9 @@ class ReleaseTests(unittest.TestCase):
                 body=json.load(r);self.assertFalse(body['chainVerified']);self.assertEqual(body['releaseState'],'PREPARED')
                 self.assertNotIn('RPC_URL',json.dumps(body));self.assertIn("frame-ancestors 'none'",r.headers['Content-Security-Policy'])
             with urlopen(base+'/') as r:
-                html=r.read().decode();self.assertIn('暂无真实收益率 · 尚未启用收益策略',html)
+                html=r.read().decode();self.assertIn('app.js',html)
+                self.assertIn('暂无真实收益率 · 尚未启用收益策略',(ROOT/'release/public/app.js').read_text())
+                self.assertIn('No live yield rate · Yield strategy is not enabled',(ROOT/'release/public/app.js').read_text())
             for path,status in [('/api/status',503),('/v1/work-packages',404),('/../provider/core.py',404),('/.env',404),('/operator',404)]:
                 with self.subTest(path=path),self.assertRaises(HTTPError) as caught:urlopen(base+path)
                 self.assertEqual(caught.exception.code,status)

@@ -1,60 +1,13 @@
 'use strict';
-const $ = id => document.getElementById(id);
-const chain = '0xaa36a7';
-let generation = 0, pending = false, account = null;
-const wallet = window.ethereum;
-function status(text) { $('wallet-status').textContent = text; }
-function clearSession() {
-  generation++; account = null;
-  $('connect').textContent = '连接钱包'; $('wallet-panel').hidden = true;
-  $('account').textContent = '';
-}
-function showAccount(accounts) {
-  if (!Array.isArray(accounts) || !/^0x[0-9a-fA-F]{40}$/.test(accounts[0] || '')) {
-    clearSession(); status('钱包未授权账户'); return;
-  }
-  account = accounts[0]; $('connect').textContent = `${account.slice(0,6)}…${account.slice(-4)}`;
-  $('account').textContent = account;
-}
-$('connect').addEventListener('click', async () => {
-  if (account) { $('wallet-panel').hidden = !$('wallet-panel').hidden; return; }
-  if (!wallet) { status('未检测到钱包扩展。请安装 MetaMask 后刷新页面。'); return; }
-  if (pending) return;
-  pending = true; const requestGeneration = generation;
-  $('connect').disabled = true; status('等待钱包账户授权…');
-  try {
-    const accounts = await wallet.request({method:'eth_requestAccounts'});
-    const network = await wallet.request({method:'eth_chainId'});
-    if (requestGeneration !== generation) return;
-    if (network.toLowerCase() !== chain) { clearSession(); status('网络不匹配，请在钱包中选择 Ethereum Sepolia，然后重新连接。'); return; }
-    showAccount(accounts); status(account ? '账户已连接 · 合约未核验 · 资金操作未开放' : '钱包未授权账户');
-  } catch (error) {
-    if (requestGeneration === generation) status(error.code === 4001 ? '已拒绝账户授权，可重新连接。' : error.code === -32002 ? '钱包已有待处理请求，请在扩展中完成。' : '钱包连接失败，请检查扩展状态。');
-  } finally { pending = false; $('connect').disabled = false; }
-});
-$('disconnect').addEventListener('click', () => { clearSession(); status('已退出站点。钱包授权请在扩展中管理。'); });
-$('network').addEventListener('click', () => status('仅支持 Ethereum Sepolia（11155111）。请在钱包扩展中选择此网络；本站不自动切换网络。'));
-if (wallet && wallet.on) {
-  wallet.on('accountsChanged', () => { clearSession(); status('钱包账户已改变，请重新连接以确认账户。'); });
-  wallet.on('chainChanged', () => { clearSession(); status('钱包网络已改变，请选择 Sepolia 后重新连接。'); });
-  wallet.on('disconnect', () => { clearSession(); status('钱包连接已断开。'); });
-}
-const tabs = {
-  deposit:['存入金额','USDC','只读预览，不生成报价或交易。'],
-  redeem:['赎回份额','acUSDC','即时退出需要足额可信流动性，不足时整体回滚。当前未开放。'],
-  queue:['排队份额','acUSDC','24 小时批次；关闭前可取消未结算份额，预留债权仅可领取。当前未开放。']
+const $=id=>document.getElementById(id),chain='0xaa36a7';let account=null,pending=false,generation=0;
+const wallet=window.ethereum;
+const L={
+ 'zh-CN':{toggle:'English',lang:'切换语言',title:'AC DeFi · 资产概览',workspace:'资产工作台',overview:'资产概览',vaultNav:'USDC 金库',strategies:'收益策略',activity:'活动记录',security:'安全与治理',readOnly:'只读产品预览',noActions:'无资金操作',dashboard:'工作台',connect:'连接钱包',signOut:'退出站点',idle:'钱包尚未连接 · 仅请求账户读取权限',hero:'让资产配置，清晰可见。',heroText:'以 USDC 为基础，了解金库、策略与退出机制。',unverified:'链上部署尚未核验',unverifiedText:'当前不提供存款、赎回或授权操作。余额与收益数据暂不可用。',assets:'我的资产',vaultAssets:'金库管理资产',yield:'年化收益率',disabled:'尚未启用',noYield:'暂无真实收益率 · 尚未启用收益策略',vault:'USDC 金库',vaultText:'存入 USDC，持有可转让的 acUSDC 份额。当前仅展示规格，未接入可执行合约。',deposit:'存款',redeem:'即时赎回',queue:'排队退出',amount:'存入金额',balance:'可用余额：不可用',form:'只读预览，不生成报价或交易。',funds:'尚未开放资金操作',strategy:'多协议，独立边界',strategyText:'以下是规格目标，并非实际配置或已实现收益。',unavailable:'不可用',events:'尚未接入已核验的事件来源',eventsText:'这里将展示存款、赎回与排队事件。没有数据不代表没有历史活动。',risk:'风险与发布状态',riskText:'本金和收益不保证。尚无真实协议核验、安全审计或 Mitosis Mission 验收。Provider 仅完成本地契约演练。',metadata:'发布元数据 ↗',health:'服务健康 ↗',wait:'等待钱包账户授权…',missing:'未检测到钱包扩展。请安装 MetaMask 后刷新页面。',noAccount:'钱包未授权账户',wrong:'网络不匹配，请在钱包中选择 Ethereum Sepolia，然后重新连接。',connected:'账户已连接 · 合约未核验 · 资金操作未开放',rejected:'已拒绝账户授权，可重新连接。',pending:'钱包已有待处理请求，请在扩展中完成。',failed:'钱包连接失败，请检查扩展状态。',signed:'已退出站点。钱包授权请在扩展中管理。',network:'仅支持 Ethereum Sepolia（11155111）。请在钱包扩展中选择此网络；本站不自动切换网络。',changed:'钱包状态已改变，请重新连接以确认账户。',invalid:'请输入最多 6 位小数的非负金额。此处不生成交易。',unavailableForm:'余额与报价不可用，资金操作未开放。',status:'服务状态暂不可用，保持只读。'},
+ en:{toggle:'简体中文',lang:'Switch language',title:'AC DeFi · Asset overview',workspace:'Asset workspace',overview:'Asset overview',vaultNav:'USDC vault',strategies:'Yield strategies',activity:'Activity',security:'Security & governance',readOnly:'Read-only product preview',noActions:'No fund operations',dashboard:'Dashboard',connect:'Connect wallet',signOut:'Sign out',idle:'Wallet not connected · requests account read access only',hero:'Make allocation visible.',heroText:'Use USDC to understand the vault, strategies, and exit rules.',unverified:'On-chain deployment is not verified',unverifiedText:'Deposits, redemptions, and approvals are unavailable. Balance and yield data are unavailable.',assets:'My assets',vaultAssets:'Vault assets',yield:'Annual yield',disabled:'Not enabled',noYield:'No live yield rate · Yield strategy is not enabled',vault:'USDC vault',vaultText:'Deposit USDC to hold transferable acUSDC shares. This is a specification preview without an executable contract.',deposit:'Deposit',redeem:'Instant redeem',queue:'Queued exit',amount:'Deposit amount',balance:'Available balance: unavailable',form:'Read-only preview. No quote or transaction is created.',funds:'Fund operations are not enabled',strategy:'Multiple protocols, isolated boundaries',strategyText:'These are specification targets, not actual allocations or yield.',unavailable:'Unavailable',events:'No verified event source connected',eventsText:'Deposits, redemptions, and queue events will appear here. No data does not mean no activity.',risk:'Risk & release status',riskText:'Principal and yield are not guaranteed. There is no live protocol verification, security audit, or Mitosis Mission acceptance. The Provider completed a local contract exercise only.',metadata:'Release metadata ↗',health:'Service health ↗',wait:'Waiting for wallet account permission…',missing:'No wallet extension detected. Install MetaMask and refresh this page.',noAccount:'Wallet did not authorize an account',wrong:'Wrong network. Choose Ethereum Sepolia in your wallet, then reconnect.',connected:'Account connected · contract unverified · fund operations unavailable',rejected:'Account permission was rejected. You can reconnect.',pending:'A wallet request is already pending. Complete it in the extension.',failed:'Wallet connection failed. Check the extension state.',signed:'Signed out from this site. Manage wallet permissions in your extension.',network:'Only Ethereum Sepolia (11155111) is supported. Select it in the wallet extension; this site will not switch networks.',changed:'Wallet state changed. Reconnect to confirm the account.',invalid:'Enter a non-negative amount with up to 6 decimals. No transaction is created.',unavailableForm:'Balance and quote are unavailable; fund operations are disabled.',status:'Service status is temporarily unavailable; keeping the site read-only.'}
 };
-document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-tab]').forEach(tab => tab.setAttribute('aria-selected', String(tab === button)));
-  const [label,unit,help] = tabs[button.dataset.tab];
-  $('amount-label').textContent = label; $('amount-unit').textContent = unit;
-  $('form-help').textContent = help; $('amount').value = '';
-}));
-$('amount').addEventListener('input', () => {
-  const value = $('amount').value;
-  $('form-help').textContent = value && !/^(0|[1-9]\d*)(\.\d{0,6})?$/.test(value)
-    ? '请输入最多 6 位小数的非负金额。此处不生成交易。' : '余额与报价不可用，资金操作未开放。';
-});
-fetch('/api/status').then(r => r.json()).then(data => {
-  if (data.verified !== false || data.transactionsEnabled !== false) status('配置状态异常，保持只读。');
-}).catch(() => status('服务状态暂不可用，保持只读。'));
+function storage(){try{return window.localStorage}catch{return null}}let locale=storage()?.getItem('ac-defi.locale');if(!L[locale])locale=String(window.navigator?.language||'').startsWith('en')?'en':'zh-CN';const t=()=>L[locale];
+function status(s){if($('wallet-status'))$('wallet-status').textContent=s}
+function render(){const x=t();document.documentElement.lang=locale;document.title=x.title;$('app').innerHTML=`<div class="shell"><aside><a class="brand" href="/"><span class="mark">AC</span> DeFi<span class="beta">${x.readOnly}</span></a><p class="eyebrow">${x.workspace}</p><nav><a class="selected" href="#overview">◈ ${x.overview}</a><a href="#vault">▣ ${x.vaultNav}</a><a href="#strategies">◇ ${x.strategies}</a><a href="#activity">↗ ${x.activity}</a><a href="#security">◎ ${x.security}</a></nav><div class="sidebar-note"><span class="dot"></span>Ethereum Sepolia<p>${x.readOnly}<br>${x.noActions}</p></div></aside><main><header><div>${x.dashboard} <span class="muted">/ ${x.overview}</span></div><div class="header-actions"><button id="locale" class="network" aria-label="${x.lang}">${x.toggle}</button><button id="network" class="network">◉ Sepolia</button><button id="connect" class="primary">${account?account.slice(0,6)+'…'+account.slice(-4):x.connect}</button></div></header><div id="wallet-panel" hidden><p id="account"></p><button id="disconnect">${x.signOut}</button></div><p id="wallet-status" role="status" aria-live="polite">${x.idle}</p><section id="overview" class="intro"><div><p class="eyebrow purple">Single asset · Unleveraged supply</p><h1>${x.hero}</h1><p class="muted">${x.heroText}</p></div><span class="outline-tag">READ ONLY</span></section><div class="notice"><span>ⓘ</span><div><strong>${x.unverified}</strong><p>${x.unverifiedText}</p></div></div><section class="stats"><article><p>${x.assets} <span>USDC</span></p><h2>—</h2></article><article><p>${x.vaultAssets} <span>USDC</span></p><h2>—</h2></article><article class="yield"><p>${x.yield} <span class="purple">APR</span></p><h2>— <span>${x.disabled}</span></h2><small>${x.noYield}</small></article></section><div class="columns"><section id="vault" class="card"><div class="section-title"><div><p class="eyebrow">ERC-4626 · Product structure</p><h2>${x.vault}</h2></div><span class="token">$</span></div><p class="muted">${x.vaultText}</p><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="deposit">${x.deposit}</button><button role="tab" aria-selected="false" data-tab="redeem">${x.redeem}</button><button role="tab" aria-selected="false" data-tab="queue">${x.queue}</button></div><div class="amount"><label for="amount" id="amount-label">${x.amount}</label><div><input id="amount" inputmode="decimal" placeholder="0.00"><strong id="amount-unit">USDC</strong></div><small>${x.balance}</small></div><p id="form-help" class="muted">${x.form}</p><button class="disabled-action" disabled>${x.funds}</button></section><section id="strategies" class="card"><div class="section-title"><div><p class="eyebrow">Strategy allocation</p><h2>${x.strategy}</h2></div><span class="outline-tag">${x.disabled}</span></div><p class="muted">${x.strategyText}</p>${['Aave V3','Compound III','Spark'].map(n=>`<div class="strategy"><span class="protocol">${n[0]}</span><div><strong>${n}</strong><small>${x.unavailable}</small></div><div><b>${x.unavailable}</b><small>${x.disabled}</small></div></div>`).join('')}</section></div><section id="activity" class="card activity"><div class="section-title"><h2>${x.activity}</h2></div><div class="empty">≋<h3>${x.events}</h3><p>${x.eventsText}</p></div></section><section id="security" class="security"><div><h3>${x.risk}</h3><p>${x.riskText}</p></div></section><footer><span>AC DeFi / Sepolia ${x.readOnly}</span><a href="/release">${x.metadata}</a><a href="/health">${x.health}</a></footer></main></div>`;for(const [id,value] of [['locale',x.toggle],['connect',account?account.slice(0,6)+'…'+account.slice(-4):x.connect],['disconnect',x.signOut],['wallet-status',x.idle],['account',account||'']])$(id).textContent=value;$('wallet-panel').hidden=true;bind();}
+function reset(message){generation++;account=null;render();if(message)status(message)}
+function bind(){const x=t();$('locale').addEventListener('click',()=>{locale=locale==='zh-CN'?'en':'zh-CN';storage()?.setItem('ac-defi.locale',locale);render()});$('connect').addEventListener('click',async()=>{if(account){$('wallet-panel').hidden=!$('wallet-panel').hidden;return}if(!wallet)return status(x.missing);if(pending)return;pending=true;const g=generation;$('connect').disabled=true;status(x.wait);try{const a=await wallet.request({method:'eth_requestAccounts'}),n=await wallet.request({method:'eth_chainId'});if(g!==generation)return;if(n.toLowerCase()!==chain)return reset(x.wrong);if(!/^0x[0-9a-fA-F]{40}$/.test(a[0]||''))return reset(x.noAccount);account=a[0];$('connect').textContent=account.slice(0,6)+'…'+account.slice(-4);$('account').textContent=account;status(x.connected)}catch(e){if(g===generation)status(e.code===4001?x.rejected:e.code===-32002?x.pending:x.failed)}finally{pending=false;if($('connect'))$('connect').disabled=false}});$('disconnect').addEventListener('click',()=>reset(x.signed));$('network').addEventListener('click',()=>status(x.network));const tabs={deposit:[x.amount,'USDC',x.form],redeem:[x.redeem,'acUSDC',x.unavailableForm],queue:[x.queue,'acUSDC',x.unavailableForm]};document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{const q=tabs[b.dataset.tab];$('amount-label').textContent=q[0];$('amount-unit').textContent=q[1];$('form-help').textContent=q[2]}));$('amount').addEventListener('input',()=>{const v=$('amount').value;status(v&&!/^(0|[1-9]\d*)(\.\d{0,6})?$/.test(v)?x.invalid:x.unavailableForm)});fetch('/api/status').catch(()=>status(x.status))}
+if(wallet&&wallet.on){wallet.on('accountsChanged',()=>reset(t().changed));wallet.on('chainChanged',()=>reset(t().changed));wallet.on('disconnect',()=>reset(t().changed))}render();
